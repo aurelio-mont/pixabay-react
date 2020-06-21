@@ -6,6 +6,9 @@ function App() {
   // state de la appp
   const [busqueda, setBusqueda] = useState('');
   const [imagenes, setImagenes] = useState([]);
+  const [paginaactual, setPaginaActual] = useState(1);
+  const [totalpaginas, setTotalPaginas] = useState(1);
+
   
   useEffect(() => {
     if(busqueda === '') return;
@@ -13,16 +16,38 @@ function App() {
     const consultaApi = async () => {
       const imagenesPorPagina = 30;
       const key ='2446661-bac9f89614ac87b8b95a78e62';
-      const url = `https://pixabay.com/api/?key=${key}&q=${busqueda}&per_page=${imagenesPorPagina}`;
+      const url = `https://pixabay.com/api/?key=${key}&q=${busqueda}&per_page=${imagenesPorPagina}&page=${paginaactual}`;
       const respuesta = await fetch(url);
       const resultado = await respuesta.json();
       setImagenes(resultado.hits);
+      
+      //Calcular el total de paginas
+      const calcularTotoalPaginas = Math.ceil(resultado.totalHits / imagenesPorPagina);
+      setTotalPaginas(calcularTotoalPaginas);
+
+      // Mover la pantalla hacia arriba
+      const jumbotron = document.querySelector('.jumbotron');
+      jumbotron.scrollIntoView({ behavior: 'smooth' });
     }
 
     consultaApi();
-      
 
-  }, [busqueda]);
+  }, [busqueda, paginaactual]);
+
+  // Definir pagina antarior
+  const paginaAnterior = () => {
+    const nuevaPaginaActual = paginaactual - 1;
+    if (nuevaPaginaActual === 0) return;
+    setPaginaActual(nuevaPaginaActual);
+  }
+
+  //Definir pagina siguiente
+  const paginaSiguiente = () => {
+    const nuevaPaginaActual = paginaactual + 1;
+    if (nuevaPaginaActual > totalpaginas) return;
+    setPaginaActual(nuevaPaginaActual);
+  }
+
   return (
     <div className="container">
       <div className="jumbotron">
@@ -35,6 +60,21 @@ function App() {
         <ListadoImagenes
           imagenes={imagenes}
         />
+        {(paginaactual === 1) ? null : (
+          <button
+            type="button"
+            className="bbtn btn-info mr-1"
+            onClick={paginaAnterior}
+          >&laquo; Anterior</button>
+        ) }
+        {(paginaactual === totalpaginas) ? null : (
+          <button
+            type="button"
+            className="bbtn btn-info"
+            onClick={paginaSiguiente}
+          >Siguiente &raquo;</button>
+        ) }
+        
       </div>
     </div>
   );
